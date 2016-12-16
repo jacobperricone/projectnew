@@ -460,7 +460,7 @@ def predict_it_crossval(X, Y, data_name):
         "SGD Classifier": sl.SGDClassifier(loss='modified_huber', penalty='elasticnet', l1_ratio=0.15, n_iter=5,
                                            shuffle=True, verbose=False, n_jobs=10, average=False,
                                            class_weight='balanced'),
-        "Logistic Regression": sl.LogisticRegression(solver='sag', tol=1e-1, C=1.e4 / X_train.shape[0]),
+        "Logistic Regression": sl.LogisticRegression(solver='sag', tol=1e-1, C=1.e4 / X.shape[0]),
         "SVM with rbf kernel": svm.SVC(kernel='rbf', C=2.5,probability=True),
         "SVM with linear kernel": svm.SVC(kernel='linear', C=2.5,probability=True),
         # "SVM with polynomial kernel": svm.SVC(kernel='poly'),
@@ -498,10 +498,10 @@ def predict_it_crossval(X, Y, data_name):
 
         results_r[name] = (Y, train_predict_crossval(estimator, X, Y))
         results_p[name] = (Y,train_predict_crossval(estimator, X[indices[name]], Y))
-        plot_learning_curve(estimator, name + '_LearningCurve_' + data_name + '_reg', X, Y)
-        plot_learning_curve(estimator, name + '_LearningCurve_' + data_name + '_feature_selection', X[indices[name]], Y)
-        do_roc(estimator,X,Y, name + '_ROC_CURVE' + data_name + '_reg' )
-        do_roc(estimator, X[indices[name]], Y, name + '_ROC_CURVE_' + data_name + '_feature_selection')
+        plot_learning_curve(estimator, name + '_LearningCurve_' + data_name + '_reg', X, Y, name)
+        plot_learning_curve(estimator, name + '_LearningCurve_' + data_name + '_feature_selection', X[indices[name]], Y, name)
+        do_roc(estimator,X,Y, name + '_ROC_CURVE' + data_name + '_reg' , name)
+        do_roc(estimator, X[indices[name]], Y, name + '_ROC_CURVE_' + data_name + '_feature_selection', name)
 
     df_r = []
     df_p = []
@@ -583,11 +583,11 @@ def predict_it(X_train, y_train, X_test, Y_test):
 
 
 
-def plot_learning_curve(estimator, title, X, y, ylim=None, cv=10,
+def plot_learning_curve(estimator, title, X, y, name, ylim=None, cv=10,
                         n_jobs=1, train_sizes=np.linspace(.1, 1.0, 5)):
 
     plt.figure()
-    plt.title(title)
+    plt.title('Learning Curve: ' + name)
     if ylim is not None:
         plt.ylim(*ylim)
     plt.xlabel("Training examples")
@@ -616,7 +616,7 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=10,
 
 
 
-def do_roc(estimator,X,Y,title):
+def do_roc(estimator,X,Y,title, name):
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=.5,
                                                         random_state=0)
     print estimator.__str__().split("(")[0]
@@ -627,12 +627,12 @@ def do_roc(estimator,X,Y,title):
         y_score = y_score[:,1]
 
 
-    plot_roc(estimator, 2, y_test, y_score, title)
+    plot_roc(estimator, 2, y_test, y_score, title, name)
 
 
 
 
-def plot_roc(classifier, n_classes, Y_test, Y_score,title):
+def plot_roc(classifier, n_classes, Y_test, Y_score,title, name):
 
 
     fpr, tpr,_ = roc_curve(Y_test, Y_score,pos_label=1)
@@ -650,7 +650,7 @@ def plot_roc(classifier, n_classes, Y_test, Y_score,title):
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic example')
+    plt.title('Receiver operating characteristic curve: ' + name)
     plt.legend(loc="lower right")
     plt.savefig('ImagesROC/' + title + '.png', bbox_inches='tight')
     plt.close()
@@ -685,7 +685,7 @@ def main():
     #         X.to_pickle(Seasons[i] + '_' + str(r[0]) + '_' + str(r[1]) + '_.pickle')
     #
     pwd = os.getcwd()
-    reg_data = [x for x in os.listdir(pwd) if '_QUARTER_2_.pickle' in x or '_QUARTER_3_.pickle' in x or 'HALF_SEASON_.pickle' in x]
+    reg_data = [x for x in os.listdir(pwd) if '_QUARTER_2_.pickle' in x or '_QUARTER_3_.pickle' in x or 'HALF_SEASON_.pickle' in x or '_QUARTER_1_.pickle' in x]
     data_big = [pd.read_pickle(lol) for lol in reg_data]
 
 
